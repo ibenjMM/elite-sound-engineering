@@ -11,7 +11,7 @@ from pydub.effects import compress_dynamic_range
 
 # Define the upload folder and allowed extensions
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'wav'}
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'm4a', 'flac', 'aac'}
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

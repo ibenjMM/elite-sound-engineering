@@ -125,3 +125,13 @@ After processing, a detailed analysis report is displayed on the results page. I
     - **1.0**: The channels are identical (mono).
     - **0.0**: The channels are completely different (very wide stereo).
     - **-1.0**: The channels are perfectly out of phase (which can cause problems on mono playback systems).
+
+## Mobile Use and PWA
+
+The application is designed to be mobile-friendly.
+
+- **Responsive Design**: The layout will automatically adjust for smaller screen sizes, making it easy to use on a phone or tablet.
+- **Supported Formats**: In addition to `.wav`, the tool supports common mobile audio formats like `.mp3`, `.m4a`, and `.aac`.
+- **Add to Home Screen (PWA)**: On supported mobile browsers (like Chrome for Android and Safari for iOS), you can "install" this web app to your home screen. This will make it launch like a native app in its own window.
+    - **On Android/Chrome**: Look for a "Install app" or "Add to Home screen" option in the browser menu.
+    - **On iOS/Safari**: Tap the "Share" button and then select "Add to Home Screen".

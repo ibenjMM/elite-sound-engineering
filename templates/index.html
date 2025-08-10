@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Normalizer</title>
+    <title>Audio Mastering Tool</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#007bff">
     <style>
         body {
             font-family: sans-serif;
@@ -54,12 +56,12 @@
         <form action="/process" method="post" enctype="multipart/form-data">
             <div class="file-upload-section">
                 <div>
-                    <label for="file">Your Track (.wav)</label>
-                    <input type="file" id="file" name="file" accept=".wav" required>
+                    <label for="file">Your Track</label>
+                    <input type="file" id="file" name="file" accept="audio/*" required>
                 </div>
                 <div>
                     <label for="reference_file">Reference Track (Optional)</label>
-                    <input type="file" id="reference_file" name="reference_file" accept=".wav">
+                    <input type="file" id="reference_file" name="reference_file" accept="audio/*">
                 </div>
             </div>
 
@@ -284,6 +286,16 @@
         }
 
         document.addEventListener('DOMContentLoaded', initializeValues);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
     </script>
     <style>
         .eq-controls, .compressor-controls {
@@ -331,6 +343,28 @@
         .file-upload-section div {
             display: flex;
             flex-direction: column;
+        }
+
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                padding: 20px 0;
+            }
+            .container {
+                width: 90%;
+                padding: 20px;
+            }
+            .file-upload-section, .eq-controls, .compressor-controls, .crossover-controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            .band-group {
+                width: 100%;
+            }
+            input[type="range"] {
+                width: 80%;
+            }
         }
     </style>
 </body>

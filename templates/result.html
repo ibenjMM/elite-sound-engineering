@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Processing Complete</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#007bff">
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f9; }
         .container { text-align: center; padding: 40px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: white; }
@@ -65,6 +67,25 @@
         .metrics-table th {
             background-color: #f2f2f2;
         }
+
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                padding: 20px 0;
+            }
+            .container, .analysis-container {
+                width: 90%;
+                padding: 15px;
+            }
+            .plot-row {
+                flex-direction: column;
+            }
+            .plot-container {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -99,6 +120,17 @@
         <a href="{{ url_for('index') }}" class="back-link">Process Another File</a>
     </div>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
     <div class="analysis-container">
         <h2>Analysis Report</h2>
 
