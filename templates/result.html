@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Processing Complete</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f9; }
+        .container { text-align: center; padding: 40px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: white; }
+        h1 { color: #333; }
+        p { font-size: 18px; color: #555; }
+        a { background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px; }
+        a:hover { background-color: #218838; }
+        .back-link { margin-top: 20px; display: block; color: #007bff; text-decoration: none; }
+        .eq-summary {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
+        }
+         .eq-summary h4, .compressor-summary h4 {
+            margin-top: 0;
+         }
+        .compressor-summary, .multiband-summary {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .multiband-summary p {
+            font-size: 14px;
+            margin: 5px;
+        }
+        .analysis-container {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .plot-row {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .plot-container {
+            width: 32%;
+        }
+        .plot-container img {
+            width: 100%;
+            border: 1px solid #ddd;
+        }
+        .metrics-table {
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .metrics-table table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .metrics-table th, .metrics-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .metrics-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Processing Complete!</h1>
+        <p>Original Loudness: <strong>{{ original_loudness }} LUFS</strong></p>
+        <p>Target Loudness (pre-EQ): <strong>{{ target_loudness }} LUFS</strong></p>
+        <div class="eq-summary">
+            <h4>Applied EQ Settings:</h4>
+            <p>Lows: <strong>{{ low_gain }} dB</strong></p>
+            <p>Mids: <strong>{{ mid_gain }} dB</strong></p>
+            <p>Highs: <strong>{{ high_gain }} dB</strong></p>
+        </div>
+        <div class="compressor-summary">
+            <h4>Applied Compressor Settings:</h4>
+            <p>Threshold: <strong>{{ threshold }} dBFS</strong></p>
+            <p>Ratio: <strong>{{ ratio|round(1) }}:1</strong></p>
+            <p>Attack: <strong>{{ attack }} ms</strong></p>
+            <p>Release: <strong>{{ release }} ms</strong></p>
+        </div>
+        <div class="multiband-summary">
+            <h4>Applied Multi-band Compressor Settings:</h4>
+            <p>Crossovers: <strong>{{ lxo }} Hz</strong> / <strong>{{ hxo }} Hz</strong></p>
+            <div class="summary-band-group">
+                <p><strong>Low Band:</strong> T: {{ low_band_threshold }} dB, R: {{ low_band_ratio|round(1) }}:1, A: {{ low_band_attack }}ms, R: {{ low_band_release }}ms</p>
+                <p><strong>Mid Band:</strong> T: {{ mid_band_threshold }} dB, R: {{ mid_band_ratio|round(1) }}:1, A: {{ mid_band_attack }}ms, R: {{ mid_band_release }}ms</p>
+                <p><strong>High Band:</strong> T: {{ high_band_threshold }} dB, R: {{ high_band_ratio|round(1) }}:1, A: {{ high_band_attack }}ms, R: {{ high_band_release }}ms</p>
+            </div>
+        </div>
+        <br>
+        <a href="{{ url_for('uploaded_file', filename=processed_file) }}" download>Download Processed File</a>
+        <a href="{{ url_for('index') }}" class="back-link">Process Another File</a>
+    </div>
+
+    <div class="analysis-container">
+        <h2>Analysis Report</h2>
+
+        <h4>Waveforms</h4>
+        <div class="plot-row">
+            <div class="plot-container">
+                <h5>Original</h5>
+                <img src="{{ url_for('static', filename=analysis.original.waveform_url) }}" alt="Original Waveform">
+            </div>
+            {% if analysis.reference %}
+            <div class="plot-container">
+                <h5>Reference</h5>
+                <img src="{{ url_for('static', filename=analysis.reference.waveform_url) }}" alt="Reference Waveform">
+            </div>
+            {% endif %}
+            <div class="plot-container">
+                <h5>Processed</h5>
+                <img src="{{ url_for('static', filename=analysis.processed.waveform_url) }}" alt="Processed Waveform">
+            </div>
+        </div>
+
+        <h4>Spectrums</h4>
+        <div class="plot-row">
+            <div class="plot-container">
+                <h5>Original</h5>
+                <img src="{{ url_for('static', filename=analysis.original.spectrum_url) }}" alt="Original Spectrum">
+            </div>
+            {% if analysis.reference %}
+            <div class="plot-container">
+                <h5>Reference</h5>
+                <img src="{{ url_for('static', filename=analysis.reference.spectrum_url) }}" alt="Reference Spectrum">
+            </div>
+            {% endif %}
+            <div class="plot-container">
+                <h5>Processed</h5>
+                <img src="{{ url_for('static', filename=analysis.processed.spectrum_url) }}" alt="Processed Spectrum">
+            </div>
+        </div>
+
+        <div class="metrics-table">
+            <h4>Numeric Analysis</h4>
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Original</th>
+                    {% if analysis.reference %}<th>Reference</th>{% endif %}
+                    <th>Processed</th>
+                </tr>
+                <tr>
+                    <td>Crest Factor</td>
+                    <td>{{ analysis.original.dynamics.crest_factor }}</td>
+                    {% if analysis.reference %}<td>{{ analysis.reference.dynamics.crest_factor }}</td>{% endif %}
+                    <td>{{ analysis.processed.dynamics.crest_factor }}</td>
+                </tr>
+                <tr>
+                    <td>Stereo Correlation</td>
+                    <td>{{ analysis.original.correlation }}</td>
+                    {% if analysis.reference %}<td>{{ analysis.reference.correlation }}</td>{% endif %}
+                    <td>{{ analysis.processed.correlation }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

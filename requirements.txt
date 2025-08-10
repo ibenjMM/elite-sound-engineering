@@ -1,0 +1,7 @@
+Flask
+pydub
+pyloudnorm
+numpy
+soundfile
+matplotlib
+scipy

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Normalizer</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+        }
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Audio for Loudness Normalization</h1>
+        <p>Upload a WAV file to normalize its loudness to -14 LUFS.</p>
+        <form action="/process" method="post" enctype="multipart/form-data">
+            <div class="file-upload-section">
+                <div>
+                    <label for="file">Your Track (.wav)</label>
+                    <input type="file" id="file" name="file" accept=".wav" required>
+                </div>
+                <div>
+                    <label for="reference_file">Reference Track (Optional)</label>
+                    <input type="file" id="reference_file" name="reference_file" accept=".wav">
+                </div>
+            </div>
+
+            <hr style="margin: 20px 0;">
+            <div class="presets-section">
+                <h3>Producer Signature Presets</h3>
+                <select id="preset-select" onchange="applyPreset()">
+                    <option value="manual">-- Manual --</option>
+                    <option value="dre">Dr. Dre Bass Emphasis</option>
+                    <option value="rubin">Rick Rubin Minimal Punch</option>
+                    <option value="martin">George Martin Warmth</option>
+                </select>
+            </div>
+            <hr style="margin: 20px 0;">
+
+            <h3>3-Band EQ Controls</h3>
+            <div class="eq-controls">
+                <div class="eq-band">
+                    <label for="low_gain">Lows (dB)</label>
+                    <input type="range" id="low_gain" name="low_gain" min="-12" max="12" value="0" step="1" oninput="updateValue('low_gain_value', this.value, ' dB')">
+                    <span id="low_gain_value">0 dB</span>
+                </div>
+                <div class="eq-band">
+                    <label for="mid_gain">Mids (dB)</label>
+                    <input type="range" id="mid_gain" name="mid_gain" min="-12" max="12" value="0" step="1" oninput="updateValue('mid_gain_value', this.value, ' dB')">
+                    <span id="mid_gain_value">0 dB</span>
+                </div>
+                <div class="eq-band">
+                    <label for="high_gain">Highs (dB)</label>
+                    <input type="range" id="high_gain" name="high_gain" min="-12" max="12" value="0" step="1" oninput="updateValue('high_gain_value', this.value, ' dB')">
+                    <span id="high_gain_value">0 dB</span>
+                </div>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <h3>Compressor Controls</h3>
+            <div class="compressor-controls">
+                <div class="compressor-band">
+                    <label for="threshold">Threshold (dBFS)</label>
+                    <input type="range" id="threshold" name="threshold" min="-60" max="0" value="-20" step="1" oninput="updateValue('threshold_value', this.value, ' dBFS')">
+                    <span id="threshold_value">-20 dBFS</span>
+                </div>
+                <div class="compressor-band">
+                    <label for="ratio">Ratio</label>
+                    <input type="range" id="ratio" name="ratio" min="1" max="20" value="4" step="0.1" oninput="updateValue('ratio_value', this.value, ':1')">
+                    <span id="ratio_value">4.0:1</span>
+                </div>
+                <div class="compressor-band">
+                    <label for="attack">Attack (ms)</label>
+                    <input type="range" id="attack" name="attack" min="0" max="100" value="5" step="1" oninput="updateValue('attack_value', this.value, ' ms')">
+                    <span id="attack_value">5 ms</span>
+                </div>
+                <div class="compressor-band">
+                    <label for="release">Release (ms)</label>
+                    <input type="range" id="release" name="release" min="0" max="1000" value="50" step="10" oninput="updateValue('release_value', this.value, ' ms')">
+                    <span id="release_value">50 ms</span>
+                </div>
+            </div>
+
+            <hr style="margin: 20px 0;">
+
+            <h3>Multi-band Compressor Controls</h3>
+            <div class="multiband-controls">
+                <h4>Crossovers</h4>
+                <div class="crossover-controls">
+                    <div>
+                        <label for="lxo">Low/Mid Crossover (Hz)</label>
+                        <input type="range" id="lxo" name="lxo" min="50" max="1000" value="250" step="10" oninput="updateValue('lxo_value', this.value, ' Hz')">
+                        <span id="lxo_value">250 Hz</span>
+                    </div>
+                    <div>
+                        <label for="hxo">Mid/High Crossover (Hz)</label>
+                        <input type="range" id="hxo" name="hxo" min="1000" max="8000" value="4000" step="100" oninput="updateValue('hxo_value', this.value, ' Hz')">
+                        <span id="hxo_value">4000 Hz</span>
+                    </div>
+                </div>
+
+                <div class="band-group">
+                    <h4>Low Band</h4>
+                    <div class="compressor-band">
+                        <label for="low_band_threshold">Threshold</label>
+                        <input type="range" id="low_band_threshold" name="low_band_threshold" min="-60" max="0" value="-20" step="1" oninput="updateValue('low_band_threshold_value', this.value, ' dBFS')">
+                        <span id="low_band_threshold_value">-20 dBFS</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="low_band_ratio">Ratio</label>
+                        <input type="range" id="low_band_ratio" name="low_band_ratio" min="1" max="20" value="4" step="0.1" oninput="updateValue('low_band_ratio_value', this.value, ':1')">
+                        <span id="low_band_ratio_value">4.0:1</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="low_band_attack">Attack</label>
+                        <input type="range" id="low_band_attack" name="low_band_attack" min="0" max="100" value="5" step="1" oninput="updateValue('low_band_attack_value', this.value, ' ms')">
+                        <span id="low_band_attack_value">5 ms</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="low_band_release">Release</label>
+                        <input type="range" id="low_band_release" name="low_band_release" min="0" max="1000" value="50" step="10" oninput="updateValue('low_band_release_value', this.value, ' ms')">
+                        <span id="low_band_release_value">50 ms</span>
+                    </div>
+                </div>
+
+                <div class="band-group">
+                    <h4>Mid Band</h4>
+                    <div class="compressor-band">
+                        <label for="mid_band_threshold">Threshold</label>
+                        <input type="range" id="mid_band_threshold" name="mid_band_threshold" min="-60" max="0" value="-20" step="1" oninput="updateValue('mid_band_threshold_value', this.value, ' dBFS')">
+                        <span id="mid_band_threshold_value">-20 dBFS</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="mid_band_ratio">Ratio</label>
+                        <input type="range" id="mid_band_ratio" name="mid_band_ratio" min="1" max="20" value="4" step="0.1" oninput="updateValue('mid_band_ratio_value', this.value, ':1')">
+                        <span id="mid_band_ratio_value">4.0:1</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="mid_band_attack">Attack</label>
+                        <input type="range" id="mid_band_attack" name="mid_band_attack" min="0" max="100" value="5" step="1" oninput="updateValue('mid_band_attack_value', this.value, ' ms')">
+                        <span id="mid_band_attack_value">5 ms</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="mid_band_release">Release</label>
+                        <input type="range" id="mid_band_release" name="mid_band_release" min="0" max="1000" value="50" step="10" oninput="updateValue('mid_band_release_value', this.value, ' ms')">
+                        <span id="mid_band_release_value">50 ms</span>
+                    </div>
+                </div>
+
+                <div class="band-group">
+                    <h4>High Band</h4>
+                    <div class="compressor-band">
+                        <label for="high_band_threshold">Threshold</label>
+                        <input type="range" id="high_band_threshold" name="high_band_threshold" min="-60" max="0" value="-20" step="1" oninput="updateValue('high_band_threshold_value', this.value, ' dBFS')">
+                        <span id="high_band_threshold_value">-20 dBFS</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="high_band_ratio">Ratio</label>
+                        <input type="range" id="high_band_ratio" name="high_band_ratio" min="1" max="20" value="4" step="0.1" oninput="updateValue('high_band_ratio_value', this.value, ':1')">
+                        <span id="high_band_ratio_value">4.0:1</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="high_band_attack">Attack</label>
+                        <input type="range" id="high_band_attack" name="high_band_attack" min="0" max="100" value="5" step="1" oninput="updateValue('high_band_attack_value', this.value, ' ms')">
+                        <span id="high_band_attack_value">5 ms</span>
+                    </div>
+                    <div class="compressor-band">
+                        <label for="high_band_release">Release</label>
+                        <input type="range" id="high_band_release" name="high_band_release" min="0" max="1000" value="50" step="10" oninput="updateValue('high_band_release_value', this.value, ' ms')">
+                        <span id="high_band_release_value">50 ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <input type="submit" value="Upload and Process" style="margin-top: 20px;">
+        </form>
+    </div>
+
+    <script>
+        const presets = {
+            manual: {
+                // This preset is used to reset to default values
+                low_gain: 0, mid_gain: 0, high_gain: 0,
+                threshold: -20, ratio: 4, attack: 5, release: 50,
+                lxo: 250, hxo: 4000,
+                low_band_threshold: -20, low_band_ratio: 4, low_band_attack: 5, low_band_release: 50,
+                mid_band_threshold: -20, mid_band_ratio: 4, mid_band_attack: 5, mid_band_release: 50,
+                high_band_threshold: -20, high_band_ratio: 4, high_band_attack: 5, high_band_release: 50,
+            },
+            dre: {
+                low_gain: 4, mid_gain: -2, high_gain: 2,
+                threshold: -22, ratio: 4.5, attack: 2, release: 120,
+                lxo: 180, hxo: 5000,
+                low_band_threshold: -24, low_band_ratio: 5, low_band_attack: 10, low_band_release: 150,
+                mid_band_threshold: -18, mid_band_ratio: 3.5, mid_band_attack: 3, mid_band_release: 100,
+                high_band_threshold: -16, high_band_ratio: 3, high_band_attack: 1, high_band_release: 80,
+            },
+            rubin: {
+                low_gain: 0, mid_gain: 2, high_gain: 0,
+                threshold: -28, ratio: 8, attack: 1, release: 50,
+                lxo: 250, hxo: 4000,
+                low_band_threshold: 0, low_band_ratio: 1, low_band_attack: 5, low_band_release: 50,
+                mid_band_threshold: 0, mid_band_ratio: 1, mid_band_attack: 5, mid_band_release: 50,
+                high_band_threshold: 0, high_band_ratio: 1, high_band_attack: 5, high_band_release: 50,
+            },
+            martin: {
+                low_gain: 2, mid_gain: 1, high_gain: -1,
+                threshold: -16, ratio: 2.5, attack: 20, release: 250,
+                lxo: 300, hxo: 3500,
+                low_band_threshold: -18, low_band_ratio: 2, low_band_attack: 25, low_band_release: 300,
+                mid_band_threshold: -15, mid_band_ratio: 2, mid_band_attack: 15, mid_band_release: 200,
+                high_band_threshold: -12, high_band_ratio: 1.5, high_band_attack: 10, high_band_release: 150,
+            }
+        };
+
+        function applyPreset() {
+            const selectedPreset = document.getElementById('preset-select').value;
+            const preset = presets[selectedPreset];
+            if (!preset) return;
+
+            for (const sliderId in preset) {
+                const slider = document.getElementById(sliderId);
+                if (slider) {
+                    slider.value = preset[sliderId];
+                    // Dispatch 'input' event to trigger UI update via oninput attribute
+                    slider.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        }
+
+        function updateValue(id, value, unit='') {
+            let displayValue = value;
+            if (id.includes('ratio')) {
+                displayValue = parseFloat(value).toFixed(1);
+            }
+            document.getElementById(id).textContent = displayValue + unit;
+        }
+
+        // Initialize all sliders and their displays on page load
+        function initializeValues() {
+            const allSliders = document.querySelectorAll('input[type="range"]');
+            allSliders.forEach(slider => {
+                slider.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeValues);
+    </script>
+    <style>
+        .eq-controls, .compressor-controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        .eq-band, .compressor-band {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 5px 10px;
+        }
+        .crossover-controls {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+        .band-group {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        .band-group h4 {
+            margin-top: 0;
+            color: #555;
+        }
+        .eq-band label, .compressor-band label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .eq-band span {
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .file-upload-section {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .file-upload-section div {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</body>
+</html>
